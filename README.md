@@ -1,24 +1,35 @@
-# Volby_2017 – Python projekt od Dao Quang Dung
+# Volby 2017 – Python projekt
 
-Dobrý den, moje jméno je **Dao Quang Dung** a mám tady tenhle Python projekt.  
-
----
-
-<h2><b> Co je to za projekt?</b></h2>
-<p>
-Tento kód získává výsledky voleb do Poslanecké sněmovny z roku 2017 napříč ČR – 
-<a target="_blank" href="https://volby.cz/pls/ps2017nss/ps3?xjazyk=CZ">web zde</a> – 
-(musíte vybrat konkrétní okres ve sloupcích).  
-Poté program zapíše všechny výsledky do krásného .CSV souboru 
-</p>
+## Autor
+- **Jméno:** Dao Quang Dung  
+- **Email:** daoqu67979@mot.sps-dopravni.cz  
+- **Discord:** Zunz AZA
 
 ---
 
-<h2><b>⚙ Jak to spustit</b></h2>
-<p>
-Před spuštěním si musíte stáhnout potřebné knihovny uvedené v souboru <code>requirements.txt</code>.
-</p>
+## projektu
 
-####  Příkaz k instalaci:
+Tento Python projekt získává výsledky voleb do Poslanecké sněmovny z roku **2017** ze stránek [volby.cz](https://volby.cz/pls/ps2017nss/ps3?xjazyk=CZ).  
+Skript zpracuje data pro **konkrétní okres**, projde všechny obce a uloží výsledky hlasování do `.csv` souboru.
+
+---
+
+## Co program dělá:
+
+- Stáhne HTML stránky pro zvolený okres
+- Najde odkazy na všechny obce v okrese
+- Pro každou obec získá:
+  - kód a název obce
+  - počet voličů, obálek, platných hlasů
+  - počet hlasů pro každou stranu
+- Všechna data uloží do jednoho `.csv` souboru
+
+---
+
+## Jak program spustit
+
+### 1. Instalace potřebných knihoven
+
+Nejdříve nainstalujte knihovny uvedené v souboru `requirements.txt`:
 ```bash
 pip3 install -r requirements.txt
