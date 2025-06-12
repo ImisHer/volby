@@ -1,10 +1,6 @@
 # 🗳️ Volby_2017 – Python projekt od Dao Quang Dung
 
 Dobrý den, moje jméno je **Dao Quang Dung** a mám tady tenhle Python projekt.  
-Dnes vám ukážu, co všechno s ním umím... 😎🐍
-
-Moje upřímná reakce po tom co nemám za 5 (snad 😅):  
-<img src="https://t4.ftcdn.net/jpg/02/25/43/37/360_F_225433780_adJUNaMFOgZDEY2lELYXAqfj4jCX7dBX.jpg" width="400"/>
 
 ---
 
