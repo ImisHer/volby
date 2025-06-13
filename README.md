@@ -2,7 +2,6 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8" />
-  <title> Volby 2017 – Python projekt </title>
 </head>
 <body>
 
