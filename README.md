@@ -108,18 +108,6 @@ python3 dao.py "https://www.volby.cz/pls/ps2017nss/ps32?xjazyk=CZ&xkraj=3&xnumnu
 
 <hr/>
 
-<h2> Výstupní CSV obsahuje:</h2>
-<ul>
-  <li>Kód obce</li>
-  <li>Název obce</li>
-  <li>Počet voličů v seznamu</li>
-  <li>Vydané obálky</li>
-  <li>Platné hlasy</li>
-  <li>Hlasy pro jednotlivé strany</li>
-</ul>
-
-<hr/>
-
 <h2> Kontakt</h2>
 <p>
 Pokud byste měli jakékoliv dotazy, neváhejte mě kontaktovat:
