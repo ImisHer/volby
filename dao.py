@@ -1,117 +1,113 @@
 """
-projekt_3.py: třetí projekt
+dao.py: Volby 
 
-author: Dao Quang Dung
-email: daoqu67979@mot.sps-dopravni.cz
+autor: Dao Quang Dung
+email: daoquangdung2806@gmail.com
 discord: Zunz AZA
 """
 
 import sys
-sys.argv = [
-    "projekt_3.py",
-    "https://www.volby.cz/pls/ps2017nss/ps32?xjazyk=CZ&xkraj=3&xnumnuts=3101",
-    "vysledky_ceske_budejovice.csv"
-]
+import csv
 import requests
 from bs4 import BeautifulSoup
-import csv
+
+POZADOVANE_STRANY = {
+    "Občanská demokratická strana": "ODS",
+    "Česká str.sociálně demokrat.": "ČSSD",
+    "Komunistická str.Čech a Moravy": "KSČM",
+    "ANO 2011": "ANO 2011",
+    "Svob.a př.dem.-T.Okamura (SPD)": "SPD",
+    "Česká pirátská strana": "Piráti",
+    "CESTA ODPOVĚDNÉ SPOLEČNOSTI": "COS",
+    "Radostné Česko": "Rado. Č.",
+    "STAROSTOVÉ A NEZÁVISLÍ": "STAN",
+    "Strana zelených": "Zelený",
+    "ROZUMNÍ-stop migraci,diktát.EU": "ROZUMNÍ",
+    "Strana svobodných občanů": "SSO",
+    "Blok proti islam.-Obran.domova": "BPI",
+    "Občanská demokratická aliance": "ODA",
+    "Referendum o Evropské unii": "EU referendum",
+    "TOP 09": "TOP 09",
+    "Dobrá volba 2016": "DB 2016",
+    "SPR-Republ.str.Čsl. M.Sládka": "SPR",
+    "Křesť.demokr.unie-Čs.str.lid.": "Křesťaní",
+    "Česká strana národně sociální": "ČSNS",
+    "REALISTÉ": "REALIST",
+    "SPORTOVCI": "SPORT",
+    "Dělnic.str.sociální spravedl.": "DSSS",
+    "Strana Práv Občanů": "SPO"
+}
 
 
-def stahni_html(url):
-    response = requests.get(url)
-    if response.status_code != 200:
-        print("Chyba při stahování stránky")
-        sys.exit(1)
-    return response.text
+def get_obce_info(main_url):
+    base = "https://volby.cz/pls/ps2017nss/"
+    r = requests.get(main_url)
+    soup = BeautifulSoup(r.text, "html.parser")
+    rows = soup.select("tr")
+
+    obce = []
+    for row in rows:
+        cislo = row.select_one("td.cislo a")
+        nazev = row.select_one("td.overflow_name")
+
+        if cislo and nazev:
+            kod_obce = cislo.text.strip()
+            nazev_obce = nazev.text.strip()
+            href = cislo["href"]
+            url = base + href
+            obce.append((kod_obce, nazev_obce, url))
+    return obce
 
 
-def ziskej_odkazy_na_obce(html):
-    soup = BeautifulSoup(html, "html.parser")
-    odkazy = soup.select("td.cislo a")
-    return ["https://volby.cz/pls/ps2017nss/" + a["href"] for a in odkazy]
+def parse_obec(url):
+    r = requests.get(url)
+    soup = BeautifulSoup(r.text, "html.parser")
 
+    volici = soup.find("td", headers="sa2").text.strip().replace("\xa0", "")
+    obalky = soup.find("td", headers="sa3").text.strip().replace("\xa0", "")
+    platne = soup.find("td", headers="sa6").text.strip().replace("\xa0", "")
 
-def zpracuj_obec(url):
-    html = stahni_html(url)
-    soup = BeautifulSoup(html, "html.parser")
+    strany = soup.find_all("td", class_="overflow_name")
+    hlasy = soup.find_all("td", headers=lambda h: h and "t1sa2" in h)
 
+    vysledky = {zkr: "0" for zkr in POZADOVANE_STRANY.values()}
+    for s, h in zip(strany, hlasy):
+        nazev = s.text.strip()
+        if nazev in POZADOVANE_STRANY:
+            zkr = POZADOVANE_STRANY[nazev]
+            pocet = h.text.strip().replace("\xa0", "")
+            vysledky[zkr] = pocet
 
-    nadpis = soup.find("h3")
-    nazev_obce = nadpis.text.strip() if nadpis else "Neznámá obec"
-    
- 
-    from urllib.parse import urlparse, parse_qs
-    qs = parse_qs(urlparse(url).query)
-    kod_obce = qs.get("xobec", ["000000"])[0]
-
-
-    volici = soup.select_one("td[headers=sa2]").text.replace("\xa0", "").strip()
-    obalky = soup.select_one("td[headers=sa3]").text.replace("\xa0", "").strip()
-    platne_hlasy = soup.select_one("td[headers=sa6]").text.replace("\xa0", "").strip()
-
-
-    strany = soup.select("td.t1name, td.t2name")
-    hlasy = soup.select("td.t1sa2, td.t2sa2")
-
-    vysledky = {
-        strany[i].text.strip(): hlasy[i].text.replace("\xa0", "").strip()
-        for i in range(len(strany))
-    }
-
-    return {
-        "kod": kod_obce,
-        "nazev": nazev_obce,
-        "volici": volici,
-        "obalky": obalky,
-        "platne_hlasy": platne_hlasy,
-        "strany": vysledky
-    }
-
-
-def uloz_csv(jmeno_souboru, vysledky):
-    hlavicky = ["kód obce", "název obce", "voliči", "obálky", "platné hlasy"]
-    vsechny_strany = sorted(set().union(*(v["strany"].keys() for v in vysledky)))
-    hlavicky.extend(vsechny_strany)
-
-    with open(jmeno_souboru, mode="w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(hlavicky)
-
-        for obec in vysledky:
-            radek = [
-                obec["kod"],
-                obec["nazev"],
-                obec["volici"],
-                obec["obalky"],
-                obec["platne_hlasy"]
-            ]
-            for strana in vsechny_strany:
-                radek.append(obec["strany"].get(strana, "0"))
-            writer.writerow(radek)
+    return volici, obalky, platne, vysledky
 
 
 def main():
     if len(sys.argv) != 3:
-        print("Zadej správně 2 argumenty: [URL] [vystupní_soubor.csv]")
-        sys.exit(1)
+        print("Použití: python dao.py <URL> <výstupní_soubor.csv>")
+        exit(1)
 
-    url = sys.argv[1]
-    vystup = sys.argv[2]
+    input_url = sys.argv[1]
+    output_csv = sys.argv[2]
 
-    print("Stahuji seznam obcí...")
-    html = stahni_html(url)
-    odkazy_na_obce = ziskej_odkazy_na_obce(html)
+    print("Stahuju more seznam obcí more...")
+    obce = get_obce_info(input_url)
+    print(f"Nalezeno obcí: {len(obce)}")
 
-    print(f"Nalezeno {len(odkazy_na_obce)} obcí. Zpracovávám...")
+    poradi = list(POZADOVANE_STRANY.values())
+    vysledky_csv = []
 
-    vysledky = []
-    for i, obec_url in enumerate(odkazy_na_obce):
-        print(f"   ({i+1}/{len(odkazy_na_obce)}) {obec_url}")
-        vysledky.append(zpracuj_obec(obec_url))
+    for kod, nazev, url in obce:
+        volici, obalky, platne, hlasy = parse_obec(url)
+        radek = [kod, nazev, volici, obalky, platne] + [hlasy[zkr] for zkr in poradi]
+        vysledky_csv.append(radek)
 
-    print(f"Ukládám do souboru {vystup}")
-    uloz_csv(vystup, vysledky)
-    print("Hotovo!")
+    with open(output_csv, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        hlavicka = ["kód obce", "název obce", "voliči v seznamu", "vydané obálky", "platné hlasy"] + poradi
+        writer.writerow(hlavicka)
+        writer.writerows(vysledky_csv)
+
+    print(f"Výsledky: {output_csv}")
 
 
 if __name__ == "__main__":
